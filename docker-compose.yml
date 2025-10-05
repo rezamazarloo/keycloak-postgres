@@ -1,0 +1,58 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:18.0
+    container_name: keycloak_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - keycloak_network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3.5
+    container_name: keycloak
+    restart: unless-stopped
+    environment:
+      KC_DB: postgres
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_URL_HOST: postgres
+      KC_DB_URL_PORT: 5432
+      # KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_ADMIN: localhost
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      TZ: Asia/Tehran
+      KC_HTTP_RELATIVE_PATH: /auth # http://localhost:8080/auth
+      KC_HOSTNAME_STRICT: false # Controls how strictly Keycloak validates the hostname used in requests (default is true)
+      # KC_HOSTNAME_STRICT_BACKCHANNEL: true # Controls hostname checks for server-to-server calls set true in production (default is false)
+      # KC_PROXY: edge # allows behind reverse proxy like nginx
+      # KC_HTTPS_PORT: 8443
+      KC_HTTP_PORT: 8080
+    command:
+      - start-dev
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+    networks:
+      - keycloak_network
+
+volumes:
+  postgres_data:
+  keycloak_data:
+
+
+networks:
+  keycloak_network:
+    driver: bridge
